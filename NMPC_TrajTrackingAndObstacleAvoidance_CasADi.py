@@ -24,28 +24,13 @@ Length = Lh + Lt  # vehicle length
 road_w = 6.0  # road_width [m]
 
 
-def normalize_angle(angle):
-    if angle > math.pi:
-        angle -= 2 * math.pi
-    if angle < -math.pi:
-        angle += 2 * math.pi
-    return angle
-
-def normalize_yaw_rate(yaw_rate):
-    while yaw_rate > math.pi/Ts:
-        yaw_rate -= 2 * math.pi/Ts
-    while yaw_rate < -math.pi/Ts:
-        yaw_rate += 2 * math.pi/Ts
-    return yaw_rate
-
-
 def vehicle_kinematics(x, u):  # this is the actual vehicle model, inside the mpc controller, usually a simplified model is used
     u1, u2 = u  # u1 is the desired acceleration, u2 is the desired steering angle
     beta = np.atan(Lr / L * np.tan(x[5]))
     x_next = np.zeros(6)
     x_next[0] = x[0] + Ts * (x[3] * cos(x[2] + beta))
     x_next[1] = x[1] + Ts * (x[3] * sin(x[2] + beta))
-    x_next[2] = normalize_angle(x[2] + Ts * x[3] / Lr * sin(beta))
+    x_next[2] = x[2] + Ts * x[3] / Lr * sin(beta)
     x_next[3] = x[3] + Ts * x[4]
     x_next[4] = x[4] - Ts * (x[4] / tau1 - u1 / tau1)
     x_next[5] = x[5] - Ts * (x[5] / tau2 - u2 / tau2)
@@ -343,6 +328,7 @@ if __name__ == "__main__":
     opti.solver('ipopt', opts_setting)
 
     current_state = global_trajectory[0] # initial vehicle state
+    current_state[3] = desired_velocity # initial velocity
     opt_controls0 = np.zeros((N, 2))  # initial optimized actions guess
     delta_controls0 = np.zeros((N, 2))  # initial action change guess
     init_trajectories, nearest_idx, min_distance = planner.get_local_trajectory(
@@ -383,7 +369,7 @@ if __name__ == "__main__":
     u1_h.append(opt_controls0[0, 0])
     u2_h.append(opt_controls0[0, 1])
     cte_h.append(init_error[0])
-    he_h.append(normalize_angle(init_error[1]))
+    he_h.append(init_error[1])
 
     # start NMPC loop
     while True:
@@ -434,7 +420,7 @@ if __name__ == "__main__":
         u1_h.append(u_res[0, 0])
         u2_h.append(u_res[0, 1])
         next_state = vehicle_kinematics(current_state, u_res[0, :])
-        yaw_rate_h.append(normalize_yaw_rate((next_state[2]-current_state[2])/Ts))
+        yaw_rate_h.append((next_state[2]-current_state[2])/Ts)
         current_state = next_state
         init_states = np.tile(current_state, N + 1).reshape(N + 1, -1)
         X_h.append(current_state[0])
@@ -451,7 +437,7 @@ if __name__ == "__main__":
         vr_h.append(init_trajectories[0, 3])
         cte_h.append((init_trajectories[0, 1] - current_state[1]) * np.cos(init_trajectories[0, 2]) - (
                 init_trajectories[0, 0] - current_state[0]) * np.sin(init_trajectories[0, 2]))
-        he_h.append(normalize_angle(init_trajectories[0, 2]-current_state[2]))
+        he_h.append(init_trajectories[0, 2]-current_state[2])
         if nearest_idx == len(global_trajectory) -1:
             break
 
@@ -470,7 +456,7 @@ if __name__ == "__main__":
     plt.title('Trajectory Tracking Comparison',fontsize=20)
     plt.legend(fontsize=20)
     plt.tight_layout()
-    plt.savefig('1.jpg')
+    plt.savefig('ttho1.jpg')
 
     time_axis = np.arange(len(X_h)) * Ts
 
@@ -563,7 +549,7 @@ if __name__ == "__main__":
     plt.title('Cross Track Error During Tracking',fontsize=20)
     plt.xlabel('Time [s]',fontsize=20)
     plt.ylabel('Distance Error (m)',fontsize=20)
-    plt.savefig('2.jpg')
+    plt.savefig('ttho2.jpg')
 
 
     plt.show()
