@@ -1,4 +1,5 @@
 This repository is mainly dedicated to NMPC based trajectory tracking with a simplified vehicle kinematic model considering action time delay.
+
 NMPC_TrajTracking_CasADi.py: pure trajectory tracking. Results:![tt1](https://github.com/user-attachments/assets/4395c812-9ab4-45eb-8e2a-bafc01bd319f) 
 ![tt2](https://github.com/user-attachments/assets/516d613e-a5c2-4c5f-bc9d-3688204113bb)
 
