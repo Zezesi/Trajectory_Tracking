@@ -201,7 +201,7 @@ class InstantPlanner:
 if __name__ == "__main__":
     Ts = 0.1  # sampling time [s]
     N = 20  # predict horizon length
-    steps = 500  # total control length [s]
+    steps = 500  # total control length
     road_w = 6.0  # road width [m]
     tau1 = Ts  # time delay [s]
     tau2 = Ts  # time delay [s]
