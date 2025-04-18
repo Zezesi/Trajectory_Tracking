@@ -39,7 +39,6 @@ def normalize_yaw_rate(yaw_rate):
     return yaw_rate
 
 
-# 车辆运动学模型
 def vehicle_kinematics(x, u):  # this is the actual vehicle model, inside the mpc controller, usually a simplified model is used
     u1, u2 = u  # u1 is the desired acceleration, u2 is the desired steering angle
     beta = np.atan(Lr / L * np.tan(x[5]))
