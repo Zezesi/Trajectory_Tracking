@@ -121,7 +121,7 @@ def generate_global_reference_trajectory(Ts=0.1, steps=750,desired_velocity=10):
         trajectory.append(state.copy())
 
         # Control logic
-        u1 = np.clip((10.0 - state[3]) / 2, MAX_DECEL, MAX_ACCEL)
+        u1 = np.clip((desired_velocity - state[3]) / 2, MAX_DECEL, MAX_ACCEL)
         if i <= cof2:
             u2 = -0.2 * np.tanh(np.square(cof1 / (cof2 - i)))
         elif i <= 2 * cof2 and i > cof2:
@@ -200,7 +200,7 @@ class InstantPlanner:
 
 if __name__ == "__main__":
     Ts = 0.1  # sampling time [s]
-    N = 20  # predict horizon length
+    N = 15  # predict horizon length
     steps = 500  # total control length
     road_w = 6.0  # road width [m]
     tau1 = Ts  # time delay [s]
@@ -342,6 +342,10 @@ if __name__ == "__main__":
     Y_h = []
     psi_h = []
     v_h = []
+    Xr_h = []
+    Yr_h = []
+    psir_h = []
+    vr_h = []
     a_h = []
     delta_f_h = []
     u1_h = []
@@ -353,6 +357,10 @@ if __name__ == "__main__":
     Y_h.append(current_state[1])
     psi_h.append(current_state[2])
     v_h.append(current_state[3])
+    Xr_h.append(init_trajectories[0,0])
+    Yr_h.append(init_trajectories[0,1])
+    psir_h.append(init_trajectories[0,2])
+    vr_h.append(init_trajectories[0,3])
     a_h.append(current_state[4])
     delta_f_h.append(current_state[5])
     u1_h.append(opt_controls0[0, 0])
@@ -377,7 +385,7 @@ if __name__ == "__main__":
             plt.plot(right_bound[:, 0], right_bound[:, 1], 'k-', linewidth=1, alpha=1)
             plt.plot(init_trajectories[:, 0], init_trajectories[:, 1], 'g-', linewidth=1, alpha=1,
                      label='Local Reference')
-            plt.plot(global_trajectory[nearest_idx, 0], global_trajectory[nearest_idx, 1], 'go', markersize=3,
+            plt.plot(Xr_h[-1], Yr_h[-1], 'go', markersize=3,
                      label='Closest Point')
             draw_vehicle(current_state[0], current_state[1], current_state[2], current_state[-1], plt.gca())
             plt.grid(True)
@@ -418,6 +426,10 @@ if __name__ == "__main__":
         delta_f_h.append(current_state[5])
         # obtain the new local trajectories
         init_trajectories, nearest_idx, min_distance = planner.get_local_trajectory(current_state)
+        Xr_h.append(init_trajectories[0, 0])
+        Yr_h.append(init_trajectories[0, 1])
+        psir_h.append(init_trajectories[0, 2])
+        vr_h.append(init_trajectories[0, 3])
         cte_h.append((init_trajectories[0, 1] - current_state[1]) * np.cos(init_trajectories[0, 2]) - (
                 init_trajectories[0, 0] - current_state[0]) * np.sin(init_trajectories[0, 2]))
         he_h.append(normalize_angle(init_trajectories[0, 2]-current_state[2]))
@@ -429,7 +441,7 @@ if __name__ == "__main__":
     plt.plot(X_h, Y_h, 'b--', label='Actual Trajectory')
     plt.plot(left_bound[:, 0], left_bound[:, 1], 'k-', linewidth=1, alpha=1,label='Left Road Boundary')
     plt.plot(right_bound[:, 0], right_bound[:, 1], 'k-', linewidth=1, alpha=1,label='Right Road Boundary')
-    plt.plot(global_trajectory[:, 0], global_trajectory[:, 1], 'g--',linewidth=2, alpha=1, label='Reference Trajectory')
+    plt.plot(Xr_h, Yr_h, 'g--',linewidth=2, alpha=1, label='Reference Trajectory')
     plt.ylabel('Y [m]')
     plt.xlabel('X [m]')
     plt.grid(True)
@@ -440,7 +452,6 @@ if __name__ == "__main__":
     plt.savefig('1.jpg')
 
     time_axis = np.arange(len(X_h)) * Ts
-    time_axis1 = np.arange(len(global_trajectory))*Ts
 
     plt.figure(figsize=(10, 5))
     plt.plot(time_axis, cte_h, 'b-', label='Cross Track Error')
@@ -456,7 +467,7 @@ if __name__ == "__main__":
 
     plt.figure(figsize=(10, 5))
     plt.plot(time_axis, np.degrees(psi_h), 'g-', label='Actual Heading Angle')
-    plt.plot(time_axis1, np.degrees(global_trajectory[:, 2]), 'm--', alpha=0.6, label='Reference Heading Angle')
+    plt.plot(time_axis, np.degrees(psir_h), 'm--', alpha=0.6, label='Reference Heading Angle')
     plt.grid(True)
     plt.title('Change In Heading Angle')
     plt.ylabel('Angle (°)')
@@ -466,7 +477,7 @@ if __name__ == "__main__":
     plt.figure(figsize=(10, 5))
     plt.plot(time_axis, v_h, 'b-', label='Actual Speed')
     plt.grid(True)
-    plt.plot(time_axis1, global_trajectory[:, 3], 'm--', alpha=0.6, label='Reference Speed')
+    plt.plot(time_axis, vr_h, 'm--', alpha=0.6, label='Reference Speed')
     plt.title('Speed Tracking')
     plt.legend()
     plt.tight_layout()
