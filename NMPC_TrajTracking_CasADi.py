@@ -302,9 +302,9 @@ if __name__ == "__main__":
     for i in range(N):
         state_error = opt_states[i, :]
         control_change = delta_control_states[i, :]
-        obj = obj + ca.mtimes([state_error, Q, state_error.T]) + ca.mtimes([control_change, R, control_change.T])
+        obj += ca.mtimes([state_error, Q, state_error.T]) + ca.mtimes([control_change, R, control_change.T])
     state_error_final = opt_states[N, :]
-    obj = obj + ca.mtimes([state_error_final, P, state_error_final.T])
+    obj += ca.mtimes([state_error_final, P, state_error_final.T])
     opti.minimize(obj)
 
     # state and action constraints
