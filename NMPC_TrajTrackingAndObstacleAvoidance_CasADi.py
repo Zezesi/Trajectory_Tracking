@@ -218,8 +218,8 @@ if __name__ == "__main__":
     margin=0.1 # safe margin [m]
     safe_diam=total_diam+margin
 
-    X_obs=[78.6,151.3]
-    Y_obs=[-10.3,-131.5]
+    X_obs=[78.6,80.0,82.0,151.3]
+    Y_obs=[-10.3,-10.5,-11.5,-131.5]
 
     # visual settings
     show_animation = True
@@ -390,8 +390,8 @@ if __name__ == "__main__":
                      label='Local Reference')
             plt.plot(Xr_h[-1], Yr_h[-1], 'go', markersize=3,
                      label='Closest Point')
-            plt.gca().add_patch(plt.Circle((X_obs[0], Y_obs[0]), Obs_diam/2,color='r', fill=False))
-            plt.gca().add_patch(plt.Circle((X_obs[1], Y_obs[1]), Obs_diam/2,color='r', fill=False))
+            for i in range(len(X_obs)):
+                plt.gca().add_patch(plt.Circle((X_obs[i], Y_obs[i]), Obs_diam/2,color='r', fill=False))
             draw_vehicle(current_state[0], current_state[1], current_state[2], current_state[-1], plt.gca())
             plt.grid(True)
             plt.axis('equal')
@@ -406,7 +406,7 @@ if __name__ == "__main__":
         opti.set_value(opt_x_ref, init_trajectories)
         opti.set_value(init_v_states, current_state)
 
-        # provide the initial guess of the optimization targets, opti.set_initial only takes place once
+        # provide the initial guess of the optimization targets
         opti.set_initial(delta_control_states, delta_controls0.reshape(N, 2))
         opti.set_initial(opt_controls, opt_controls0.reshape(N, 2))
         opti.set_initial(veh_states, init_states.reshape(N + 1, 6))
@@ -444,19 +444,17 @@ if __name__ == "__main__":
     ## after loop
     plt.figure(figsize=(20, 10))
     plt.plot(X_h, Y_h, 'b--', label='Actual Trajectory')
-    plt.plot(left_bound[:, 0], left_bound[:, 1], 'k-', linewidth=1, alpha=1,label='Left Road Boundary')
-    plt.plot(right_bound[:, 0], right_bound[:, 1], 'k-', linewidth=1, alpha=1,label='Right Road Boundary')
-    plt.plot(Xr_h, Yr_h, 'g--',linewidth=2, alpha=1, label='Reference Trajectory')
-    plt.gca().add_patch(plt.Circle((X_obs[0], Y_obs[0]), Obs_diam / 2, color='r', fill=False))
-    plt.gca().add_patch(plt.Circle((X_obs[1], Y_obs[1]), Obs_diam / 2, color='r', fill=False))
+    plt.plot(left_bound[:, 0], left_bound[:, 1], 'k-', linewidth=1, alpha=1, label='Left Road Boundary')
+    plt.plot(right_bound[:, 0], right_bound[:, 1], 'k-', linewidth=1, alpha=1, label='Right Road Boundary')
+    plt.plot(Xr_h, Yr_h, 'g--', linewidth=2, alpha=1, label='Reference Trajectory')
     plt.ylabel('Y [m]')
     plt.xlabel('X [m]')
     plt.grid(True)
     plt.axis('equal')
-    plt.title('Trajectory Tracking Comparison',fontsize=20)
+    plt.title('Trajectory Tracking Comparison', fontsize=20)
     plt.legend(fontsize=20)
     plt.tight_layout()
-    plt.savefig('ttho1.jpg')
+    plt.savefig('tt1.jpg')
 
     time_axis = np.arange(len(X_h)) * Ts
 
@@ -464,20 +462,20 @@ if __name__ == "__main__":
     plt.plot(time_axis, cte_h, 'b-', label='Cross Track Error')
     plt.grid(True)
     plt.title('Cross Track Error During Tracking')
-    plt.ylabel('Distance Error (m)')
+    plt.ylabel('Distance Error [m]')
 
     plt.figure(figsize=(10, 5))
     plt.plot(time_axis, np.degrees(he_h), 'g-', label='Heading error')
     plt.grid(True)
     plt.title('Heading Error During Tracking')
-    plt.ylabel('Angle (°)')
+    plt.ylabel('Angle [°]')
 
     plt.figure(figsize=(10, 5))
     plt.plot(time_axis, np.degrees(psi_h), 'g-', label='Actual Heading Angle')
     plt.plot(time_axis, np.degrees(psir_h), 'm--', alpha=0.6, label='Reference Heading Angle')
     plt.grid(True)
     plt.title('Change In Heading Angle')
-    plt.ylabel('Angle (°)')
+    plt.ylabel('Angle [°]')
     plt.legend()
     plt.tight_layout()
 
@@ -486,6 +484,7 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.plot(time_axis, vr_h, 'm--', alpha=0.6, label='Reference Speed')
     plt.title('Speed Tracking')
+    plt.ylabel('Speed [m/s]')
     plt.legend()
     plt.tight_layout()
 
@@ -493,7 +492,7 @@ if __name__ == "__main__":
     plt.plot(time_axis, a_h, 'r-', label='Acceleration Input')
     plt.grid(True)
     plt.title('Acceleration Control History')
-    plt.ylabel('Acceleration (m/s²)')
+    plt.ylabel('Acceleration [m/s^2]')
     plt.legend()
     plt.tight_layout()
 
@@ -501,7 +500,7 @@ if __name__ == "__main__":
     plt.plot(time_axis, delta_f_h, 'b-', label='Steering Angle Input')
     plt.grid(True)
     plt.title('Steering Control History')
-    plt.ylabel('Steering Angle (rad)')
+    plt.ylabel('Steering Angle [rad]')
     plt.legend()
     plt.tight_layout()
 
@@ -509,7 +508,7 @@ if __name__ == "__main__":
     plt.plot(time_axis[0:-1], np.diff(a_h) / Ts, 'r-', label='Acceleration Derivative ')
     plt.grid(True)
     plt.title('Jerk History')
-    plt.ylabel('Jerk (m/s^3)')
+    plt.ylabel('Jerk [m/s^3]')
     plt.legend()
     plt.tight_layout()
 
@@ -517,39 +516,38 @@ if __name__ == "__main__":
     plt.plot(time_axis[0:-1], np.diff(delta_f_h) / Ts, 'r-', label='Steering Angle Derivative ')
     plt.grid(True)
     plt.title('Steering Angle Rate History')
-    plt.ylabel('Steering Angle Rate (rad/s)')
+    plt.ylabel('Steering Angle Rate [rad/s]')
     plt.legend()
     plt.tight_layout()
 
     plt.figure(figsize=(20, 10))
-    plt.subplot(2,2,1)
+    plt.subplot(2, 2, 1)
     plt.plot(time_axis, np.rad2deg(delta_f_h), 'b-')
     plt.grid(True)
-    plt.title('Steering Control History',fontsize=20)
-    #plt.xlabel('Time [s]',fontsize=12)
-    plt.ylabel('Steering Angle ['+chr(176)+']',fontsize=20)
+    plt.title('Steering Control History', fontsize=20)
+    # plt.xlabel('Time [s]',fontsize=12)
+    plt.ylabel('Steering Angle [' + chr(176) + ']', fontsize=20)
 
     plt.subplot(2, 2, 2)
     plt.plot(time_axis[:-1], np.rad2deg(yaw_rate_h), 'b-')
     plt.grid(True)
-    plt.title('Yaw Rate History',fontsize=20)
-    #plt.xlabel('Time [s]',fontsize=12)
-    plt.ylabel('Yaw Rate [' + chr(176) + '/s]',fontsize=20)
+    plt.title('Yaw Rate History', fontsize=20)
+    # plt.xlabel('Time [s]',fontsize=12)
+    plt.ylabel('Yaw Rate [' + chr(176) + '/s]', fontsize=20)
 
     plt.subplot(2, 2, 3)
     plt.plot(time_axis, np.rad2deg(he_h), 'b-')
     plt.grid(True)
-    plt.title('Heading Error History',fontsize=20)
-    plt.xlabel('Time [s]',fontsize=20)
-    plt.ylabel('Heading Angle Error [' + chr(176) + ']',fontsize=20)
+    plt.title('Heading Error History', fontsize=20)
+    plt.xlabel('Time [s]', fontsize=20)
+    plt.ylabel('Heading Angle Error [' + chr(176) + ']', fontsize=20)
 
     plt.subplot(2, 2, 4)
     plt.plot(time_axis, cte_h, 'b-')
     plt.grid(True)
-    plt.title('Cross Track Error During Tracking',fontsize=20)
-    plt.xlabel('Time [s]',fontsize=20)
-    plt.ylabel('Distance Error (m)',fontsize=20)
-    plt.savefig('ttho2.jpg')
-
+    plt.title('Cross Track Error During Tracking', fontsize=20)
+    plt.xlabel('Time [s]', fontsize=20)
+    plt.ylabel('Distance Error (m)', fontsize=20)
+    plt.savefig('tt2.jpg')
 
     plt.show()
