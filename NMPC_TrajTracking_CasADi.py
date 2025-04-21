@@ -313,12 +313,12 @@ if __name__ == "__main__":
 
     current_state = global_trajectory[0].copy() # initial vehicle state, must use copy() to not modify global trajectory in case that current_state is modified
     current_state[3]=0.0 # initial velocity
-    print(global_trajectory[0])
+    #print(global_trajectory[0])
     opt_controls0 = np.zeros((N, 2))  # initial optimized actions guess
     delta_controls0 = np.zeros((N, 2))  # initial action change guess
     init_trajectories, nearest_idx, min_distance = planner.get_local_trajectory(
         current_state)  # set the initial trajectories for the vehicle
-    print(init_trajectories)
+    #print(init_trajectories)
     init_states = np.tile(current_state, N + 1).reshape(N + 1, -1) # set the initial states for the vehicle
     init_error = np.zeros(5) # set the states need to be optimized for the vehicle
     init_error[0] = (init_trajectories[0, 1] - current_state[1]) * np.cos(init_trajectories[0, 2]) - (
