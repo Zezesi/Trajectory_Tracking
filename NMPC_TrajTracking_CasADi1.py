@@ -313,8 +313,8 @@ if __name__ == "__main__":
 
     opti.solver('ipopt', opts_setting)
 
-    current_state = global_trajectory[0] # initial vehicle state
-    current_state[3]=0.1 # initial velocity
+    current_state = global_trajectory[0].copy() # initial vehicle state
+    current_state[3]=0.0 # initial velocity
     opt_controls0 = np.zeros((N, 2))  # initial optimized actions guess
     init_trajectories, nearest_idx, min_distance = planner.get_local_trajectory(
         current_state)  # set the initial trajectories for the vehicle

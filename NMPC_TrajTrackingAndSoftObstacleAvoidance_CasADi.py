@@ -330,8 +330,8 @@ if __name__ == "__main__":
 
     opti.solver('ipopt', opts_setting)
 
-    current_state = global_trajectory[0] # initial vehicle state
-    current_state[3] = 0.1 # initial velocity
+    current_state = global_trajectory[0].copy() # initial vehicle state
+    current_state[3] = 0.0 # initial velocity
     opt_controls0 = np.zeros((N, 2))  # initial optimized actions guess
     delta_controls0 = np.zeros((N, 2))  # initial action change guess
     init_trajectories, nearest_idx, min_distance = planner.get_local_trajectory(
@@ -457,7 +457,7 @@ if __name__ == "__main__":
     plt.title('Trajectory Tracking Comparison', fontsize=20)
     plt.legend(fontsize=20)
     plt.tight_layout()
-    plt.savefig('tt1.jpg')
+    plt.savefig('ttsc1.jpg')
 
     time_axis = np.arange(len(X_h)) * Ts
 
@@ -551,6 +551,6 @@ if __name__ == "__main__":
     plt.title('Cross Track Error During Tracking', fontsize=20)
     plt.xlabel('Time [s]', fontsize=20)
     plt.ylabel('Distance Error (m)', fontsize=20)
-    plt.savefig('tt2.jpg')
+    plt.savefig('ttsc2.jpg')
 
     plt.show()
