@@ -447,6 +447,8 @@ if __name__ == "__main__":
     plt.plot(left_bound[:, 0], left_bound[:, 1], 'k-', linewidth=1, alpha=1, label='Left Road Boundary')
     plt.plot(right_bound[:, 0], right_bound[:, 1], 'k-', linewidth=1, alpha=1, label='Right Road Boundary')
     plt.plot(Xr_h, Yr_h, 'g--', linewidth=2, alpha=1, label='Reference Trajectory')
+    for i in range(len(X_obs)):
+        plt.gca().add_patch(plt.Circle((X_obs[i], Y_obs[i]), Obs_diam / 2, color='r', fill=False))
     plt.ylabel('Y [m]')
     plt.xlabel('X [m]')
     plt.grid(True)

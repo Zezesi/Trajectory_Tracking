@@ -393,8 +393,8 @@ if __name__ == "__main__":
                      label='Local Reference')
             plt.plot(Xr_h[-1], Yr_h[-1], 'go', markersize=3,
                      label='Closest Point')
-            plt.gca().add_patch(plt.Circle((X_obs[0], Y_obs[0]), Obs_diam/2,color='r', fill=False))
-            plt.gca().add_patch(plt.Circle((X_obs[1], Y_obs[1]), Obs_diam/2,color='r', fill=False))
+            for i in range(len(X_obs)):
+                plt.gca().add_patch(plt.Circle((X_obs[i], Y_obs[i]), Obs_diam / 2, color='r', fill=False))
             draw_vehicle(current_state[0], current_state[1], current_state[2], current_state[-1], plt.gca())
             plt.grid(True)
             plt.axis('equal')
@@ -450,6 +450,8 @@ if __name__ == "__main__":
     plt.plot(left_bound[:, 0], left_bound[:, 1], 'k-', linewidth=1, alpha=1, label='Left Road Boundary')
     plt.plot(right_bound[:, 0], right_bound[:, 1], 'k-', linewidth=1, alpha=1, label='Right Road Boundary')
     plt.plot(Xr_h, Yr_h, 'g--', linewidth=2, alpha=1, label='Reference Trajectory')
+    for i in range(len(X_obs)):
+        plt.gca().add_patch(plt.Circle((X_obs[i], Y_obs[i]), Obs_diam / 2, color='r', fill=False))
     plt.ylabel('Y [m]')
     plt.xlabel('X [m]')
     plt.grid(True)

@@ -436,7 +436,7 @@ if __name__ == "__main__":
     plt.title('Trajectory Tracking Comparison', fontsize=20)
     plt.legend(fontsize=20)
     plt.tight_layout()
-    plt.savefig('tt1.jpg')
+    plt.savefig('tt11.jpg')
 
     time_axis = np.arange(len(X_h)) * Ts
 
@@ -530,6 +530,6 @@ if __name__ == "__main__":
     plt.title('Cross Track Error During Tracking', fontsize=20)
     plt.xlabel('Time [s]', fontsize=20)
     plt.ylabel('Distance Error (m)', fontsize=20)
-    plt.savefig('tt2.jpg')
+    plt.savefig('tt12.jpg')
 
     plt.show()
