@@ -7,8 +7,8 @@ Results:![tt1](https://github.com/user-attachments/assets/70fbb13b-ffac-4cc1-b34
 
 NMPC_TrajTrackingAndObstacleAvoidance_CasADi.py: trajectory tracking and obstacle avoidance with hard constraints. 
 
-Results:![tthc1](https://github.com/user-attachments/assets/d80665f4-0d7c-428e-a0aa-2eb8ba42a71d)
-![tthc2](https://github.com/user-attachments/assets/d1644490-1db4-4e37-bc85-449bb472989f)
+Results:![tthc1](https://github.com/user-attachments/assets/da7d7e49-d7d1-489d-a0c6-9166e047f1dd)
+![tthc2](https://github.com/user-attachments/assets/35c07ad6-b533-4747-8ff7-e10eca864aa6)
 
 NMPC_TrajTrackingAndSoftObstacleAvoidance_CasADi.py: trajectory tracking and obstacle avoidance with soft constraints. 
 
