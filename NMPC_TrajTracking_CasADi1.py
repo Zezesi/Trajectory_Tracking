@@ -24,17 +24,18 @@ Length = Lh + Lt  # vehicle length
 road_w = 6.0  # road_width [m]
 
 
-
 def vehicle_kinematics(x, u):  # this is the actual vehicle model, inside the mpc controller, usually a simplified model is used
     u1, u2 = u  # u1 is the desired acceleration, u2 is the desired steering angle
     beta = np.atan(Lr / L * np.tan(x[5]))
-    x_next = np.zeros(6)
+    x_next = np.zeros(8)
     x_next[0] = x[0] + Ts * (x[3] * cos(x[2] + beta))
     x_next[1] = x[1] + Ts * (x[3] * sin(x[2] + beta))
     x_next[2] = x[2] + Ts * x[3] / Lr * sin(beta)
     x_next[3] = x[3] + Ts * x[4]
     x_next[4] = x[4] - Ts * (x[4] / tau1 - u1 / tau1)
     x_next[5] = x[5] - Ts * (x[5] / tau2 - u2 / tau2)
+    x_next[6] = -x[4] / tau1 + u1 / tau1
+    x_next[7] = -x[5] / tau2 + u2 / tau2
     return x_next
 
 
@@ -91,12 +92,12 @@ def draw_vehicle(x, y, yaw, steer, ax, colort='black', colorb='red'):
 
 
 def generate_global_reference_trajectory(Ts=0.1, steps=750,desired_velocity=10):
-    # reference trajectory states constains Xr, Yr, psir vr, ar and delta_fr,
+    # reference trajectory states constains Xr, Yr, psir vr, ar and delta_fr,jerk, delta_f_dot
     # ar and delta_fr can be set to 0 or reference values
 
 
     # Re-initialize state and storage
-    state = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])  # [x, y, yaw, v, a, delta_f]
+    state = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0,0.0,0.0])  # [Xr, Yr, yaw, v, a, delta_f, jerk, delta_f_dot]
     trajectory = []
 
     for i in range(steps):
@@ -146,8 +147,10 @@ def generate_global_reference_trajectory(Ts=0.1, steps=750,desired_velocity=10):
     v_ref = trajectory[:, 3] # np.full(x_ref.shape, desired_velocity)
     a_ref = np.full(x_ref.shape, 0.0)
     delta_f_ref = np.full(x_ref.shape, 0.0)
+    j_ref = np.full(x_ref.shape, 0.0)
+    delta_f_dot_ref = np.full(x_ref.shape, 0.0)
 
-    return np.column_stack([x_ref, y_ref, yaw_ref, v_ref, a_ref, delta_f_ref])
+    return np.column_stack([x_ref, y_ref, yaw_ref, v_ref, a_ref, delta_f_ref, j_ref,delta_f_dot_ref])
 
 
 class InstantPlanner:
@@ -204,23 +207,13 @@ if __name__ == "__main__":
     u1_min = -5.0  # max deceleration
     u2_max = np.deg2rad(30) # max steering angle
     u2_min = -np.deg2rad(30) # min steering angle
-    delta_a_max = 0.8 # max acceleration change to ensure smooth acceleration transition
-    delta_a_min = -0.8
-    delta_delta_f_max = np.deg2rad(25) # max steering angle change to ensure smooth steering transition
-    delta_delta_f_min = -np.deg2rad(25)
+    j_max = 8 # max jerk
+    j_min = -8
+    delta_f_dot_max = np.deg2rad(250) # max steering angle change rate to ensure smooth steering transition
+    delta_f_dot_min = -np.deg2rad(250)
     desired_velocity=10 # [m/s]
     global_trajectory = generate_global_reference_trajectory(Ts, steps=steps, desired_velocity=desired_velocity)
     planner = InstantPlanner(global_trajectory, Np=N)
-    Lh = 2  # c.o.g. to the head [m]
-    Lt = 2.4  # c.o.g. to the tail [m]
-    Length = Lh + Lt  # vehicle length
-    Obs_diam=0.5 # obstacle diameter [m]
-    total_diam=Length+Obs_diam/2 # total diameter [m]
-    margin=0.1 # safe margin [m]
-    safe_diam=total_diam+margin
-
-    X_obs=[78.6,151.3]
-    Y_obs=[-10.3,-131.5]
 
     # visual settings
     show_animation = True
@@ -237,36 +230,35 @@ if __name__ == "__main__":
 
     opti = ca.Opti()
 
-    delta_control_states = opti.variable(N, 2)
-    delta_a = delta_control_states[:, 0]  # delta action 1: for smooth acceleration transition
-    delta_delta_f = delta_control_states[:, 1]  # delta action 2: for smooth steering angle transition
-
     opt_controls = opti.variable(N, 2)
     u1 = opt_controls[:, 0]  # action 1: desired acceleration
     u2 = opt_controls[:, 1]  # action 2: desired steering angle
 
     # vehicle states
-    veh_states = opti.variable(N + 1, 6)
+    veh_states = opti.variable(N + 1, 8)
     X = veh_states[:, 0]
     Y = veh_states[:, 1]
     psi = veh_states[:, 2]
     v = veh_states[:, 3]
     a = veh_states[:, 4]
     delta_f = veh_states[:, 5]
+    j = veh_states[:, 6]
+    delta_f_dot = veh_states[:,7]
 
     # vehicle states need to be optimized
-    opt_states = opti.variable(N + 1, 5)
+    opt_states = opti.variable(N + 1, 7)
     cte = opt_states[:, 0]
     he = opt_states[:, 1]
     ve = opt_states[:, 2]
     ae = opt_states[:, 3]
     delta_fe = opt_states[:, 4]
-
+    je = opt_states[:,5]
+    delta_f_dote=opt_states[:,6]
 
     # parameters, these parameters are the reference trajectories and the actual initial vehicle states
-    opt_x_ref = opti.parameter(N + 1, 6)
+    opt_x_ref = opti.parameter(N + 1, 8)
     # and the actual initial vehicle states
-    init_v_states = opti.parameter(1, 6)
+    init_v_states = opti.parameter(1, 8)
 
     # vehicle model
     f = lambda x, u: ca.vertcat(*[x[3] * ca.cos(x[2] + ca.atan(Lr / L * ca.tan(x[5]))),
@@ -274,7 +266,9 @@ if __name__ == "__main__":
                                   x[3] / Lr * ca.sin(ca.atan(Lr / L * ca.tan(x[5]))),
                                   x[4],
                                   u[0] / tau1 - x[4] / tau1,
-                                  u[1] / tau2 - x[5] / tau2])
+                                  u[1] / tau2 - x[5] / tau2,
+                                  u[0] / (tau1*Ts) - x[4] / (tau1*Ts),
+                                  u[1] / (tau2*Ts) - x[5] / (tau2*Ts)])
 
     # for assigning opti.variable, must use opti.subject_to; for assigning opti.parameter, use opti.set_value,but not during the optimization process; for others use =
     opti.subject_to(veh_states[0, :] == init_v_states)
@@ -284,32 +278,21 @@ if __name__ == "__main__":
     for i in range(N):
         next_veh_states = veh_states[i, :] + f(veh_states[i, :], opt_controls[i, :]).T * Ts
         opti.subject_to(veh_states[i + 1, :] == next_veh_states)
-        opti.subject_to(delta_control_states[i, :] == next_veh_states[4:] - veh_states[i, 4:])
         opti.subject_to(opt_states[i + 1, 0] == (opt_x_ref[i + 1, 1] - next_veh_states[1]) * ca.cos(opt_x_ref[i + 1, 2]) - (
                     opt_x_ref[i + 1, 0] - next_veh_states[0]) * ca.sin(opt_x_ref[i + 1, 2]))
         opti.subject_to(opt_states[i + 1, 1:] == opt_x_ref[i + 1, 2:] - next_veh_states[2:])
 
-
-
-
     # weight matrix
-    Q = np.diag([1e1, 1e-3, 1e1, 1e1, 1e1])
-    R = np.diag([1e1, 1e1])  # (delta_a, delta_delta_f)
-    P = np.diag([1e1, 1e-3, 1e1, 1e1, 1e1])  # weights for final states
+    Q = np.diag([1e1, 1e-3, 1e1, 1e1, 1e1,1e-1, 1e-1])
+    P = np.diag([1e1, 1e-3, 1e1, 1e1, 1e1,1e-1, 1e-1])  # weights for final states
 
     # cost function
     obj = 0
     for i in range(N):
         state_error = opt_states[i, :]
-        control_change = delta_control_states[i, :]
-        obj +=ca.mtimes([state_error, Q, state_error.T]) + ca.mtimes([control_change, R, control_change.T])
+        obj += ca.mtimes([state_error, Q, state_error.T])
     state_error_final = opt_states[N, :]
-    obj +=ca.mtimes([state_error_final, P, state_error_final.T])
-
-    for i in range(N+1):
-        for j in range(len(X_obs)):
-            soft_obj = 100/((veh_states[i, 0]-X_obs[j])**2+(veh_states[i, 1]-Y_obs[j])**2+0.0001)
-            obj+=soft_obj
+    obj += ca.mtimes([state_error_final, P, state_error_final.T])
     opti.minimize(obj)
 
     # state and action constraints
@@ -317,8 +300,8 @@ if __name__ == "__main__":
     opti.subject_to(opti.bounded(v_min, v, v_max))
     opti.subject_to(opti.bounded(u1_min, u1, u1_max))
     opti.subject_to(opti.bounded(u2_min, u2, u2_max))
-    opti.subject_to(opti.bounded(delta_a_min, delta_a, delta_a_max))
-    opti.subject_to(opti.bounded(delta_delta_f_min, delta_delta_f, delta_delta_f_max))
+    opti.subject_to(opti.bounded(j_min, j, j_max))
+    opti.subject_to(opti.bounded(delta_f_dot_min, delta_f_dot, delta_f_dot_max))
 
     # remember the cost function and the hard constraints can be replaced by soft functions
 
@@ -331,13 +314,12 @@ if __name__ == "__main__":
     opti.solver('ipopt', opts_setting)
 
     current_state = global_trajectory[0] # initial vehicle state
-    current_state[3] = 0.1 # initial velocity
+    current_state[3]=0.1 # initial velocity
     opt_controls0 = np.zeros((N, 2))  # initial optimized actions guess
-    delta_controls0 = np.zeros((N, 2))  # initial action change guess
     init_trajectories, nearest_idx, min_distance = planner.get_local_trajectory(
         current_state)  # set the initial trajectories for the vehicle
     init_states = np.tile(current_state, N + 1).reshape(N + 1, -1) # set the initial states for the vehicle
-    init_error = np.zeros(5) # set the states need to be optimized for the vehicle
+    init_error = np.zeros(7) # set the states need to be optimized for the vehicle
     init_error[0] = (init_trajectories[0, 1] - current_state[1]) * np.cos(init_trajectories[0, 2]) - (
                 init_trajectories[0, 0] - current_state[0]) * np.sin(init_trajectories[0, 2])
     init_error[1:] = init_trajectories[0, 2:] - current_state[2:]
@@ -393,8 +375,6 @@ if __name__ == "__main__":
                      label='Local Reference')
             plt.plot(Xr_h[-1], Yr_h[-1], 'go', markersize=3,
                      label='Closest Point')
-            plt.gca().add_patch(plt.Circle((X_obs[0], Y_obs[0]), Obs_diam/2,color='r', fill=False))
-            plt.gca().add_patch(plt.Circle((X_obs[1], Y_obs[1]), Obs_diam/2,color='r', fill=False))
             draw_vehicle(current_state[0], current_state[1], current_state[2], current_state[-1], plt.gca())
             plt.grid(True)
             plt.axis('equal')
@@ -410,10 +390,9 @@ if __name__ == "__main__":
         opti.set_value(init_v_states, current_state)
 
         # provide the initial guess of the optimization targets
-        opti.set_initial(delta_control_states, delta_controls0.reshape(N, 2))
         opti.set_initial(opt_controls, opt_controls0.reshape(N, 2))
-        opti.set_initial(veh_states, init_states.reshape(N + 1, 6))
-        opti.set_initial(opt_states, init_errors.reshape(N + 1, 5))
+        opti.set_initial(veh_states, init_states.reshape(N + 1, 8))
+        opti.set_initial(opt_states, init_errors.reshape(N + 1, 7))
 
         # solve the problem once again
         sol = opti.solve()

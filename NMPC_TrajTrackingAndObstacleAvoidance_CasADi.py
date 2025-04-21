@@ -205,8 +205,8 @@ if __name__ == "__main__":
     u2_min = -np.deg2rad(30) # min steering angle
     delta_a_max = 0.8 # max acceleration change to ensure smooth acceleration transition
     delta_a_min = -0.8
-    delta_delta_f_max = np.deg2rad(5) # max steering angle change to ensure smooth steering transition
-    delta_delta_f_min = -np.deg2rad(5)
+    delta_delta_f_max = np.deg2rad(25) # max steering angle change to ensure smooth steering transition
+    delta_delta_f_min = -np.deg2rad(25)
     desired_velocity=10 # [m/s]
     global_trajectory = generate_global_reference_trajectory(Ts, steps=steps, desired_velocity=desired_velocity)
     planner = InstantPlanner(global_trajectory, Np=N)
@@ -328,7 +328,7 @@ if __name__ == "__main__":
     opti.solver('ipopt', opts_setting)
 
     current_state = global_trajectory[0] # initial vehicle state
-    current_state[3] = desired_velocity # initial velocity
+    current_state[3] = 0.1 # initial velocity
     opt_controls0 = np.zeros((N, 2))  # initial optimized actions guess
     delta_controls0 = np.zeros((N, 2))  # initial action change guess
     init_trajectories, nearest_idx, min_distance = planner.get_local_trajectory(
