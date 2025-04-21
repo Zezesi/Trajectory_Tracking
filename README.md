@@ -21,4 +21,11 @@ modelled in the nmpc model.
 Results:![tt11](https://github.com/user-attachments/assets/e1338423-00d3-4c4b-b816-4da5dada8524)
 ![tt12](https://github.com/user-attachments/assets/194b59e5-17e7-4b09-86e9-e502c744da67)
 
+LQR_TrajTracking.py: pure trajectory tracking based on a linearized vehicle kinematic model.
+
+Results:
+![lqr1](https://github.com/user-attachments/assets/8f2c2e9c-14d5-4083-8d62-ed7e9cee5a1e)
+![lqr2](https://github.com/user-attachments/assets/1f82b4a5-5448-45af-943a-9baa0d8fa35c)
+
+
 Notes: Cost function and some hard constraints can be improved using soft functions.
