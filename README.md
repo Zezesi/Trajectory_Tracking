@@ -7,14 +7,14 @@ Results:![tt1](https://github.com/user-attachments/assets/70fbb13b-ffac-4cc1-b34
 
 NMPC_TrajTrackingAndObstacleAvoidance_CasADi.py: trajectory tracking and obstacle avoidance with hard constraints. 
 
-Results:![tthc1](https://github.com/user-attachments/assets/f9eded96-0684-4352-83e1-44c98dfbddb7)
-![tthc2](https://github.com/user-attachments/assets/cd71e5ec-8e47-4044-8184-0bb3b5cbf526)
+Results:![tthc1](https://github.com/user-attachments/assets/d80665f4-0d7c-428e-a0aa-2eb8ba42a71d)
+![tthc2](https://github.com/user-attachments/assets/d1644490-1db4-4e37-bc85-449bb472989f)
 
 NMPC_TrajTrackingAndSoftObstacleAvoidance_CasADi.py: trajectory tracking and obstacle avoidance with soft constraints. 
 
 Results:
-![ttsc1](https://github.com/user-attachments/assets/bea32ea3-48f8-4054-a24c-b834a5793320)
-![ttsc2](https://github.com/user-attachments/assets/a590e2e1-eef8-4a0f-baf6-8409bce3799f)
+![ttsc1](https://github.com/user-attachments/assets/89968050-1681-4634-a510-a5868662da3d)
+![ttsc2](https://github.com/user-attachments/assets/cbdfc69a-1af3-42c8-9eed-699dccb68c79)
 
 NMPC_TrajTracking_CasADi1.py: pure trajectory tracking, in the above scripts, delta actions are used to ensure smooth action transition, now jerk and delta_f_dot are
 modelled in the nmpc model.
