@@ -529,7 +529,7 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.title('Cross Track Error During Tracking', fontsize=20)
     plt.xlabel('Time [s]', fontsize=20)
-    plt.ylabel('Distance Error (m)', fontsize=20)
+    plt.ylabel('Distance Error [m]', fontsize=20)
     plt.savefig('tt12.jpg')
 
     plt.show()

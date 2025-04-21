@@ -3,6 +3,7 @@ import numpy as np
 import math
 from casadi import *
 import matplotlib.pyplot as plt
+from scipy.io import savemat
 
 Ts = 0.1  # sampling time [s]
 tau1 = Ts  # time delay [s]
@@ -530,8 +531,19 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.title('Cross Track Error During Tracking',fontsize=20)
     plt.xlabel('Time [s]',fontsize=20)
-    plt.ylabel('Distance Error (m)',fontsize=20)
+    plt.ylabel('Distance Error [m]',fontsize=20)
     plt.savefig('tt2.jpg')
 
 
     plt.show()
+
+    savemat('Xr.mat', {'Xr': np.array(Xr_h)})
+    savemat('Yr.mat', {'Yr': np.array(Yr_h)})
+    savemat('Xmpc.mat', {'Xmpc': np.array(X_h)})
+    savemat('Ympc.mat', {'Ympc': np.array(Y_h)})
+    savemat('lb.mat', {'lb': left_bound})
+    savemat('rb.mat', {'rb': right_bound})
+    savemat('delta_fmpc.mat', {'delta_fmpc': np.array(delta_f_h)})
+    savemat('yaw_ratempc.mat', {'yaw_ratempc': np.array(yaw_rate_h)})
+    savemat('hempc.mat', {'hempc': np.array(he_h)})
+    savemat('ctempc.mat', {'ctempc': np.array(cte_h)})
